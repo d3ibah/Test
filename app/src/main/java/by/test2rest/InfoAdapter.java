@@ -9,18 +9,29 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import by.test2rest.internet.get.Photo;
 import by.test2rest.internet.get.Post;
 
 public class InfoAdapter extends RecyclerView.Adapter<InfoAdapter.InfoViewHolder>{
 
     private List<Post> postList = new ArrayList<>();
+    private List<Photo> photoList = new ArrayList<>();
+    private Photo photo;
+    private String imageUrl;
     public final String LOG = "text";
 
     public void setPostList(List<Post> postList) {
         this.postList = postList;
+        Log.e(LOG, "setPostList");
+    }
+
+    public void setPhotoList(List<Photo> photoList) {
+        this.photoList = photoList;
         Log.e(LOG, "setPostList");
     }
 
@@ -37,6 +48,9 @@ public class InfoAdapter extends RecyclerView.Adapter<InfoAdapter.InfoViewHolder
         Post post = postList.get(position);
 
         holder.textView.setText(post.getTitle());
+        Glide.with(holder.itemView.getContext())
+                .load(getImageUrl(position))
+                .into(holder.imageView);
         Log.e("text", post.getTitle());
 
     }
@@ -45,6 +59,18 @@ public class InfoAdapter extends RecyclerView.Adapter<InfoAdapter.InfoViewHolder
     public int getItemCount() {
         Log.e(LOG, "getItemCount");
         return postList.size();
+    }
+
+    public String getImageUrl(int position) {
+        int idFarm;
+        String idServer, idPhoto, secret;
+        photo = photoList.get(position);
+        idFarm = photo.getFarm();
+        idServer = photo.getServer();
+        idPhoto = photo.getId();
+        secret = photo.getSecret();
+        imageUrl = "https://farm" + idFarm + ".staticflickr.com/" + idServer + "/" + idPhoto + "_" + secret + "_q.jpg";
+        return imageUrl;
     }
 
     public class InfoViewHolder extends RecyclerView.ViewHolder {
