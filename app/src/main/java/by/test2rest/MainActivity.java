@@ -1,11 +1,11 @@
 package by.test2rest;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,14 +13,12 @@ import java.util.List;
 import by.test2rest.internet.RestServiceRef;
 import by.test2rest.internet.RestServiceText;
 import by.test2rest.internet.get.Photo;
-import by.test2rest.internet.get.Photos;
 import by.test2rest.internet.get.Post;
 import by.test2rest.internet.get.Ref;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.http.Query;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,10 +27,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private InfoAdapter infoAdapter;
 
-    private Ref refS;
     private List<Photo> photoList;
     private RestServiceRef restServiceRef;
-    public final String LOG = "text";
+
+    // parts of the url
     public final String REFMETHOD = "flickr.photos.getRecent";
     public final String REFAPIKEY = "9f10641bd6749bb141e8ad303a1c3381";
     public final String REFEXTRAS = "description";
@@ -44,39 +42,56 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.e(LOG, "OnCreate");
+
+        // fix orientation
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        // implement click on item RecyclerView
         infoAdapter = new InfoAdapter(new ClickListener() {
             @Override
             public void onClick(Photo photo, Post post) {
                 intent = new Intent(MainActivity.this, BigImageActivity.class);
 
-                int idFarm;
-                String idServer, idPhoto, secret, photoSize;
+                String photoSize;
                 String textBody;
 
-                /*idFarm = photo.getFarm();
-                idServer = photo.getServer();
-                idPhoto = photo.getId();
-                secret = photo.getSecret();*/
                 photoSize = "n";
-                String imageUrl = "https://farm" + photo.getFarm() + ".staticflickr.com/" + photo.getServer() + "/" + photo.getId() + "_" + photo.getSecret() + "_" + photoSize + ".jpg";
+
+               /* Size Suffixes
+                * The letter suffixes are as follows:
+                * s	small square 75x75
+                * q	large square 150x150
+                * t	thumbnail, 100 on longest side
+                * m	small, 240 on longest side
+                * n	small, 320 on longest side
+                * -	medium, 500 on longest side
+                * z	medium 640, 640 on longest side
+                * c	medium 800, 800 on longest side
+                * b	large, 1024 on longest side*
+                * h	large 1600, 1600 on longest side
+                * k	large 2048, 2048 on longest side */
+
+                String imageUrl = "https://farm" + photo.getFarm() + ".staticflickr.com/"
+                        + photo.getServer() + "/" + photo.getId() + "_" + photo.getSecret()
+                        + "_" + photoSize + ".jpg";
                 textBody = post.getBody();
 
                 intent.putExtra("url", imageUrl);
                 intent.putExtra("text", textBody);
 
-
-
                 startActivity(intent);
             }
         });
+
         recyclerView = findViewById(R.id.recyclerView);
 
         restServiceText = RestServiceText.getInstanse();
 
+
+        // start Rest service for get text and image url and inflate RecyclerView
         disposable = restServiceText.getRestApiText().getItemPosts()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -88,12 +103,10 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Throwable e) {
-
                     }
 
                     @Override
                     public void onComplete() {
-
 
                         restServiceRef = RestServiceRef.getInstanse();
                         disposable = restServiceRef.getRestApiRef().getRef(REFMETHOD, REFAPIKEY, REFEXTRAS, REFPERPAGE, REFFORMAT, REFNOJSONCALLBACK)
@@ -105,26 +118,19 @@ public class MainActivity extends AppCompatActivity {
                                         photoList = new ArrayList<>();
                                         photoList = ref.getPhotos().getPhoto();
                                         infoAdapter.setPhotoList(photoList);
-
                                     }
 
                                     @Override
                                     public void onError(Throwable e) {
-
                                     }
 
                                     @Override
                                     public void onComplete() {
-                                        for (Photo photo : photoList){
-                                            Log.e("photo", photo.getSecret());
-                                        }
                                         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-                                        recyclerView.setAdapter(infoAdapter);   // replace adapter to last onComlete
+                                        recyclerView.setAdapter(infoAdapter);
                                     }
                                 });
                     }
                 });
-
-
     }
 }
