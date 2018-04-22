@@ -1,5 +1,6 @@
 package by.test2rest;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -39,13 +40,39 @@ public class MainActivity extends AppCompatActivity {
     public final String REFFORMAT = "json";
     public final int REFNOJSONCALLBACK = 1;
 
+    private Intent intent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e(LOG, "OnCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        infoAdapter = new InfoAdapter();
+        infoAdapter = new InfoAdapter(new ClickListener() {
+            @Override
+            public void onClick(Photo photo, Post post) {
+                intent = new Intent(MainActivity.this, BigImageActivity.class);
+
+                int idFarm;
+                String idServer, idPhoto, secret, photoSize;
+                String textBody;
+
+                /*idFarm = photo.getFarm();
+                idServer = photo.getServer();
+                idPhoto = photo.getId();
+                secret = photo.getSecret();*/
+                photoSize = "n";
+                String imageUrl = "https://farm" + photo.getFarm() + ".staticflickr.com/" + photo.getServer() + "/" + photo.getId() + "_" + photo.getSecret() + "_" + photoSize + ".jpg";
+                textBody = post.getBody();
+
+                intent.putExtra("url", imageUrl);
+                intent.putExtra("text", textBody);
+
+
+
+                startActivity(intent);
+            }
+        });
         recyclerView = findViewById(R.id.recyclerView);
 
         restServiceText = RestServiceText.getInstanse();
